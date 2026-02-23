@@ -1,5 +1,7 @@
 <script lang="ts">
+
   import { onMount, onDestroy } from 'svelte';
+  import { t, locale } from '$lib/i18n';
   import CreateMap from '$lib/CreateMap.svelte';
   import MapView   from '$lib/MapView.svelte';
   import PinLayer  from '$lib/PinLayer.svelte';
@@ -33,6 +35,11 @@
   let editPinId: string | null = null;
   let editPinData: Partial<PinData> | null = null;
   let showNotifications = false;
+
+  // language toggle function
+  function toggleLanguage() {
+    locale.update(current => current === 'en' ? 'es' : 'en');
+  }
 
   // OpenStreetMap raster style
   const osmStyle = {
@@ -598,7 +605,7 @@
     <div class="map-container">
       <SyncStatus {db} />
       
-      <div class="map-controls">
+      <!-- <div class="map-controls">
         <button 
           class="new-map-btn" 
           on:click={() => {
@@ -636,6 +643,55 @@
         >
           🔒
         </button>
+        <NotificationBell bind:open={showNotifications} />
+      </div> -->
+       <div class="map-controls">
+        <button class="filter-toggle-btn" on:click={toggleLanguage} title="Toggle Language">
+          🌐 {$locale.toUpperCase()}
+        </button>
+
+        <button 
+          class="new-map-btn" 
+          on:click={() => {
+            mapId = '';
+            const url = new URL(window.location.href);
+            url.searchParams.delete('map');
+            window.history.pushState({}, '', url);
+          }}
+          title={$t('app.createMapTitle')} 
+        >
+          {$t('app.newMap')}
+        </button>
+
+        {#if mapData}
+          <ShareMap
+            mapId={mapId}
+            accessToken={mapData.access_token}
+            isPrivate={mapData.is_private === 'true'}
+          />
+        {/if}
+
+        <button class="filter-toggle-btn" on:click={() => showFilter = !showFilter}>
+          <span>🔍</span>
+          {$t('app.filter')}
+        </button>
+
+        <button 
+          class="panic-btn" 
+          on:click={() => showPanicWipe = true}
+          title={$t('app.wipeTitle')}
+        >
+          {$t('app.wipe')}
+        </button>
+
+        <button 
+          class="encryption-btn" 
+          on:click={() => showEncryptionSetup = !showEncryptionSetup}
+          title={$t('app.encryptionSettings')}
+        >
+          🔒
+        </button>
+        
         <NotificationBell bind:open={showNotifications} />
       </div>
 
@@ -711,10 +767,16 @@
     on:cancel={() => showPanicWipe = false}
   />
   
-  {#if isMapLoading}
+  <!-- {#if isMapLoading}
     <div class="loading-overlay">
       <div class="spinner"></div>
       <p>Syncing Map...</p>
+    </div>
+  {/if} -->
+  {#if isMapLoading}
+    <div class="loading-overlay">
+      <div class="spinner"></div>
+      <p>{$t('app.syncing')}</p>
     </div>
   {/if}
 </main>
